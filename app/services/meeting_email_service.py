@@ -233,7 +233,7 @@ def send_not_interested_email(to_email: str):
         "No problem at all — if you’d like to connect in the future, "
         "feel free to reach out anytime.\n\n"
         "Wishing you all the best.\n\n"
-        "Best regards,\n"
+        "Best regards,\n\n"
         "Nandhakumar"
     )
 

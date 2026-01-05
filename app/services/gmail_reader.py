@@ -17,7 +17,7 @@ def get_gmail_service():
 def fetch_recent_emails():
     service = get_gmail_service()
 
-    # 🔥 only inbox, not sent by you, not mailer-daemon
+    #  only inbox, not sent by you, not mailer-daemon
     results = service.users().messages().list(
         userId="me",
         q="is:inbox -from:me -from:mailer-daemon -from:postmaster"

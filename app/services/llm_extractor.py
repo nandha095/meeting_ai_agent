@@ -26,7 +26,7 @@ Email:
 """
 
     try:
-        # 🔴 PLACEHOLDER: plug your LLM call here
+        #  PLACEHOLDER: plug your LLM call here
         # response_text = call_llm(prompt)
 
         # TEMP example output for testing:

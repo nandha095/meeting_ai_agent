@@ -38,16 +38,6 @@ from datetime import datetime
 import pytz
 import re
 
-# TZ_MAP = {
-#     "EST": "America/New_York",
-#     "EDT": "America/New_York",
-#     "PST": "America/Los_Angeles",
-#     "PDT": "America/Los_Angeles",
-#     "IST": "Asia/Kolkata",
-#     "UTC": "UTC",
-#     "GMT": "UTC",
-# }
-
 TZ_MAP = {
     "EST": "America/New_York",
     "EDT": "America/New_York",
@@ -70,7 +60,7 @@ def extract_time_and_timezone(text: str):
         return None
 
     # 2️ Extract timezone abbreviation manually
-    tz_match = re.search(r"\b(EST|EDT|PST|PDT|IST|UTC|GMT)\b", text, re.IGNORECASE)
+    tz_match = re.search(r"\b(EST|EDT|CST|CDT|MST|MDT|PST|PDT|IST|UTC|GMT)\b", text, re.IGNORECASE)
     if not tz_match:
         return None
 

@@ -97,7 +97,7 @@ def detect_meeting_intent(text: str):
     # 2️ Time provided (AM/PM or HH:MM with optional timezone)
     if re.search(r"\b(\d{1,2}(:\d{2})?\s?(am|pm))\b", t) or \
        re.search(r"\b\d{1,2}:\d{2}\b", t):
-        if re.search(r"\b(ist|est|pst|gmt|utc|edt|pdt|mdt|mst|cdt|cst)\b", t):
+        if re.search(r"\b(ist|est|pst|gmt|utc|edt|pdt|mdt|mst|cdt|cst|)\b", t):
             return {"intent": "CLIENT_PROVIDED_TIME", "confidence": 0.9}
 
     # 3️ Interest without time
