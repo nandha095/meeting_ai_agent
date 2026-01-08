@@ -25,7 +25,7 @@ def convert_client_time_to_ist(
     ist_tz = pytz.timezone("Asia/Kolkata")
     now_client = datetime.now(client_tz)
 
-    # 1️⃣ Decide date
+    # 1️ Decide date
     if date_str:
         base_date = datetime.fromisoformat(date_str).date()
     elif weekday:
@@ -36,7 +36,7 @@ def convert_client_time_to_ist(
     else:
         base_date = (now_client + timedelta(days=1)).date()
 
-    # 2️⃣ Parse time
+    # 2️ Parse time
     hour, minute = map(int, time_str.split(":"))
 
     client_dt = client_tz.localize(datetime(

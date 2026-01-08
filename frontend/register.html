@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register - AI Meeting Agent</title>
+</head>
+<body style="font-family: Arial; padding: 40px">
+
+<h2>Register</h2>
+
+<label>Email</label><br>
+<input id="email" placeholder="Enter email"><br><br>
+
+<label>Password</label><br>
+<input id="password" type="password" placeholder="Enter password"><br><br>
+
+<button onclick="register()">Register</button>
+
+<p id="message"></p>
+
+<script>
+const API = "http://127.0.0.1:8000";
+
+async function register() {
+  const res = await fetch(`${API}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: document.getElementById("email").value,
+      password: document.getElementById("password").value
+    })
+  });
+
+  if (res.ok) {
+    document.getElementById("message").innerText =
+      "✅ Registered successfully";
+  } else {
+    const data = await res.json();
+    document.getElementById("message").innerText =
+      "❌ " + (data.detail || "Registration failed");
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,9 +1,31 @@
 from datetime import datetime, timedelta
-from app.services.google_calendar import get_calendar_service
+from sqlalchemy.orm import Session
+from googleapiclient.discovery import build
+
+from app.services.google_credentials import get_google_credentials
 
 
-def create_google_meet(summary, description, start_time, duration_minutes=30):
-    service = get_calendar_service()
+def get_calendar_service(db: Session, user_id: int):
+    """
+    Returns Google Calendar service for a specific user
+    """
+    creds = get_google_credentials(db, user_id)
+    return build("calendar", "v3", credentials=creds)
+
+
+def create_google_meet(
+    db: Session,
+    user_id: int,
+    summary: str,
+    description: str,
+    start_time: datetime,
+    duration_minutes: int = 30,
+    timezone: str = "Asia/Kolkata",
+):
+    """
+    Creates a Google Meet event for a specific user
+    """
+    service = get_calendar_service(db, user_id)
     end_time = start_time + timedelta(minutes=duration_minutes)
 
     event = {
@@ -11,11 +33,11 @@ def create_google_meet(summary, description, start_time, duration_minutes=30):
         "description": description,
         "start": {
             "dateTime": start_time.isoformat(),
-            "timeZone": "Asia/Kolkata",
+            "timeZone": timezone,
         },
         "end": {
             "dateTime": end_time.isoformat(),
-            "timeZone": "Asia/Kolkata",
+            "timeZone": timezone,
         },
         "conferenceData": {
             "createRequest": {
@@ -34,10 +56,10 @@ def create_google_meet(summary, description, start_time, duration_minutes=30):
     entry_points = conference.get("entryPoints", [])
 
     if not entry_points:
-        raise Exception("Google Meet link not created")
+        raise Exception("Google Meet link was not created")
 
     return {
         "meet_link": entry_points[0]["uri"],
-        "start": start_time,
-        "end": end_time
+        "start_time": start_time,
+        "end_time": end_time,
     }

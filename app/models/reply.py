@@ -1,18 +1,17 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
 from app.db.base import Base
-from sqlalchemy import Boolean
 
 class Reply(Base):
     __tablename__ = "replies"
 
     id = Column(Integer, primary_key=True)
-    gmail_message_id = Column(String, unique=True, index=True)
-    sender = Column(String)
-    subject = Column(String)
-    body = Column(String)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    proposal_id = Column(Integer, ForeignKey("proposals.id"), nullable=False)
+
+    gmail_message_id = Column(String(255), unique=True, index=True)
+    sender = Column(String(255))
+    subject = Column(String(255))
+    body = Column(String(5000))
 
     meeting_interest = Column(Boolean, default=False)
     confidence = Column(Float, default=0.0)
-
-    
-    waiting_for_schedule = Column(Boolean, default=False)

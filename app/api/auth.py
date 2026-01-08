@@ -1,0 +1,169 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from app.db.session import get_db
+from app.models.user import User
+from app.models.google_token import GoogleToken
+from app.services.gmail_auth import get_google_auth_flow
+
+# --------------------
+# CONFIG
+# --------------------
+SECRET_KEY = "CHANGE_THIS_SECRET_LATER"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+router = APIRouter(prefix="/auth", tags=["Auth"])
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+# --------------------
+# PASSWORD HELPERS
+# --------------------
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(password: str, hashed: str) -> bool:
+    return pwd_context.verify(password, hashed)
+
+# --------------------
+# JWT HELPERS
+# --------------------
+def create_access_token(user_id: int):
+    payload = {
+        "sub": str(user_id),
+        "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload.get("sub"))
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
+
+# =========================================================
+# USER REGISTER
+# =========================================================
+@router.post("/register")
+def register(email: str, password: str, db: Session = Depends(get_db)):
+
+    if len(password.encode("utf-8")) > 72:
+        raise HTTPException(
+            status_code=400,
+            detail="Password too long (max 72 bytes)"
+        )
+
+    if db.query(User).filter(User.email == email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user = User(
+        email=email,
+        password_hash=hash_password(password)
+    )
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return {"message": "User registered successfully"}
+
+# =========================================================
+# USER LOGIN (FIXED ✅)
+# =========================================================
+@router.post("/login")
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(
+        User.email == form_data.username
+    ).first()
+
+    if not user or not verify_password(
+        form_data.password,
+        user.password_hash
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+
+    token = create_access_token(user.id)
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
+
+# =========================================================
+# GOOGLE OAUTH (LOGGED-IN USER)
+# =========================================================
+@router.get("/google/login")
+def google_login(current_user: User = Depends(get_current_user)):
+    flow = get_google_auth_flow()
+
+    auth_url, state = flow.authorization_url(
+    access_type="offline",
+    prompt="consent",
+    state=str(current_user.id)
+)
+
+    return {"auth_url": auth_url}
+
+@router.get("/google/callback")
+def google_callback(
+    code: str,
+    state: str,
+    db: Session = Depends(get_db)
+):
+    print("🔥 GOOGLE CALLBACK HIT")
+
+    user_id = int(state)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    flow = get_google_auth_flow()
+    flow.fetch_token(code=code)  # ⚠️ warning is now ignored
+    creds = flow.credentials
+
+    if not creds.refresh_token:
+        raise HTTPException(
+            status_code=400,
+            detail="No refresh token received. Re-consent required."
+        )
+
+    db.query(GoogleToken).filter(
+        GoogleToken.user_id == user.id
+    ).delete()
+
+    token = GoogleToken(
+        user_id=user.id,
+        access_token=creds.token,
+        refresh_token=creds.refresh_token,
+        token_uri=creds.token_uri,
+        scopes=" ".join(creds.scopes),
+        expiry=creds.expiry
+    )
+
+    db.add(token)
+    db.commit()
+
+    return {"message": "Google connected successfully"}

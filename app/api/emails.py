@@ -1,17 +1,30 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from app.api.schemas import ProposalEmailRequest
 from app.services.email_service import send_proposal_email
 from app.db.deps import get_db
 from app.models.proposal import Proposal
+from app.models.user import User
+from app.models.google_token import GoogleToken
+from app.api.auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/emails",
+    tags=["Emails"]
+)
+
 
 @router.post("/send-proposal")
 def send_proposal(
     payload: ProposalEmailRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
+    """
+    Send a project proposal email using the logged-in user's Gmail
+    """
+
     subject = "Project Proposal"
     body = """
     <h3>Hello,</h3>
@@ -21,20 +34,41 @@ def send_proposal(
     <p>Regards,<br>Nandhakumar</p>
     """
 
-    # Send email
+    # 🔐 Ensure Google is connected for this user
+    token = db.query(GoogleToken).filter(
+        GoogleToken.user_id == current_user.id
+    ).first()
+
+    if not token:
+        raise HTTPException(
+            status_code=400,
+            detail="Please connect your Google account before sending proposals"
+        )
+
+    # ✅ Send email using THIS user's Gmail
     send_proposal_email(
+        db=db,
+        user_id=current_user.id,
         to_email=payload.email,
         subject=subject,
         body=body
     )
 
-    # Save to DB
+    # ✅ Save proposal in DB
     proposal = Proposal(
+        user_id=current_user.id,
         client_email=payload.email,
         subject=subject,
-        body=body
+        body=body,
+        status="SENT"
     )
+
     db.add(proposal)
     db.commit()
+    db.refresh(proposal)
 
-    return {"message": "Proposal sent and saved"}
+    return {
+        "message": "Proposal sent successfully",
+        "proposal_id": proposal.id,
+        "sent_from": current_user.email
+    }

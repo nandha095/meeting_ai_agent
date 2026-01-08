@@ -1,23 +1,26 @@
 import base64
 import email
-import os
-from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from sqlalchemy.orm import Session
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+from app.services.google_credentials import get_google_credentials
 
 
-def get_gmail_service():
-    creds = Credentials.from_authorized_user_file(
-        "gmail_token.json", SCOPES
-    )
+def get_gmail_service(db: Session, user_id: int):
+    """
+    Returns Gmail service for a specific user
+    """
+    creds = get_google_credentials(db, user_id)
     return build("gmail", "v1", credentials=creds)
 
 
-def fetch_recent_emails():
-    service = get_gmail_service()
+def fetch_recent_emails(db: Session, user_id: int):
+    """
+    Fetch recent inbox emails for a specific user
+    """
+    service = get_gmail_service(db, user_id)
 
-    #  only inbox, not sent by you, not mailer-daemon
+    # Only inbox, not sent by user, not system mails
     results = service.users().messages().list(
         userId="me",
         q="is:inbox -from:me -from:mailer-daemon -from:postmaster"

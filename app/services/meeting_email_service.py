@@ -78,22 +78,31 @@
 # """
 
 #     send_email(to_email, subject, body)
+import base64
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from sqlalchemy.orm import Session
 
-from app.services.email_service import send_email
+from app.services.gmail_reader import get_gmail_service
 
 
+# -------------------------------------------------
+# SEND MEETING LINK EMAIL (GMAIL API – MULTI USER)
+# -------------------------------------------------
 def send_meeting_link_email(
-    to_email,
-    meet_link,
+    db: Session,
+    user_id: int,
+    to_email: str,
+    meet_link: str,
     client_time,
     ist_time,
     client_timezone
 ):
+    service = get_gmail_service(db, user_id)
+
     subject = "Meeting Scheduled – Google Meet Link"
 
-    # -------------------------------------------------
-    # Plain-text fallback (for non-HTML clients)
-    # -------------------------------------------------
+    # -------- TEXT VERSION (fallback) --------
     if client_time and client_timezone:
         text_time = (
             f"Meeting Time ({client_timezone}):\n"
@@ -118,9 +127,7 @@ def send_meeting_link_email(
         "Nandhakumar P"
     )
 
-    # -------------------------------------------------
-    # HTML version (main email Gmail will render)
-    # -------------------------------------------------
+    # -------- HTML VERSION --------
     if client_time and client_timezone:
         html_time = f"""
         <p><strong>Meeting Time ({client_timezone}):</strong><br>
@@ -144,7 +151,6 @@ def send_meeting_link_email(
 
         <p>
           <strong>Google Meet Link:</strong><br><br>
-          <h1>{meet_link}</h1>
           <a href="{meet_link}"
              style="
                display:inline-block;
@@ -173,10 +179,28 @@ def send_meeting_link_email(
     </html>
     """
 
-    send_email(to_email, subject, body_text, body_html)
+    msg = MIMEMultipart("alternative")
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body_text, "plain"))
+    msg.attach(MIMEText(body_html, "html"))
+
+    raw = base64.urlsafe_b64encode(
+        msg.as_bytes()
+    ).decode()
+
+    service.users().messages().send(
+        userId="me",
+        body={"raw": raw}
+    ).execute()
 
 
-def send_schedule_choice_email(to_email):
+# -------------------------------------------------
+# ASK CLIENT TO SHARE TIME (GMAIL API)
+# -------------------------------------------------
+def send_schedule_choice_email(db: Session, user_id: int, to_email: str):
+    service = get_gmail_service(db, user_id)
+
     subject = "Meeting Scheduling – Next Steps"
 
     body_text = (
@@ -194,49 +218,57 @@ def send_schedule_choice_email(to_email):
 
     body_html = """
     <html>
-      <body style="font-family: Arial, sans-serif; color: #333;">
+      <body style="font-family: Arial, sans-serif;">
         <p>Hi,</p>
-
         <p>Thank you for your interest in our proposal.</p>
-
         <p>To schedule our meeting, please choose one of the following:</p>
-
         <ul>
-          <li>
-            Reply with your preferred <strong>date, time, and timezone</strong><br>
-            <em>Example: Friday, December 27th at 9:00 PM EST</em>
-          </li>
-          <li>
-            Or simply reply with:<br>
-            <strong>You can schedule</strong>
-          </li>
+          <li>Reply with your preferred <strong>date, time, and timezone</strong></li>
+          <li>Or reply with <strong>You can schedule</strong></li>
         </ul>
-
-        <p>Looking forward to connecting with you.</p>
-
-        <p>
-          Best regards,<br>
-          <strong>Nandhakumar P</strong>
-        </p>
+        <p>Looking forward to connecting.</p>
+        <p><strong>Nandhakumar P</strong></p>
       </body>
     </html>
     """
 
-    send_email(to_email, subject, body_text, body_html)
+    msg = MIMEMultipart("alternative")
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body_text, "plain"))
+    msg.attach(MIMEText(body_html, "html"))
 
-def send_not_interested_email(to_email: str):
+    raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+
+    service.users().messages().send(
+        userId="me",
+        body={"raw": raw}
+    ).execute()
+
+
+# -------------------------------------------------
+# NOT INTERESTED EMAIL (GMAIL API)
+# -------------------------------------------------
+def send_not_interested_email(db: Session, user_id: int, to_email: str):
+    service = get_gmail_service(db, user_id)
+
     subject = "Thank you for your response"
-
     body = (
         "Hi,\n\n"
         "Thank you for letting us know.\n\n"
         "No problem at all — if you’d like to connect in the future, "
         "feel free to reach out anytime.\n\n"
-        "Wishing you all the best.\n\n"
-        "Best regards,\n\n"
+        "Best regards,\n"
         "Nandhakumar"
     )
 
-    send_email(to_email, subject, body)
+    msg = MIMEText(body, "plain")
+    msg["To"] = to_email
+    msg["Subject"] = subject
 
+    raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
 
+    service.users().messages().send(
+        userId="me",
+        body={"raw": raw}
+    ).execute()
