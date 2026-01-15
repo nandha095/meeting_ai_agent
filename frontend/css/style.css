@@ -3,76 +3,161 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
-/* Page background */
+/* Background */
 body {
-  background: #f4f6f8;
+  background: linear-gradient(135deg, #eef2f7, #f9fbfd);
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Main container */
+/* Card */
 .container {
   background: #ffffff;
   width: 420px;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-/* Headings */
-h2 {
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   text-align: center;
-  margin-bottom: 20px;
-  color: #333;
 }
 
-/* Inputs & textarea */
-input,
-textarea {
+/* AI Icon */
+.ai-icon {
+  font-size: 42px;
+  margin-bottom: 10px;
+}
+
+/* Heading */
+h2 {
+  color: #222;
+  margin-bottom: 5px;
+}
+
+/* Subtitle */
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+/* Inputs */
+input {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 12px;
-  border-radius: 6px;
+  padding: 12px;
+  border-radius: 8px;
   border: 1px solid #ccc;
   font-size: 14px;
+  margin-bottom: 12px;
 }
 
-textarea {
-  resize: none;
-  height: 90px;
+/* 🔥 KEY FIX: remove bottom margin ONLY for password */
+#password {
+  margin-bottom: 0;
 }
 
-/* Buttons */
+/* Forgot password */
+.forgot-row {
+  width: 100%;
+  text-align: right;
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
+
+.forgot-row a {
+  font-size: 13px;
+  color: #6f42c1;
+  text-decoration: none;
+}
+
+.forgot-row a:hover {
+  text-decoration: underline;
+}
+
+/* Button */
 button {
   width: 100%;
   padding: 12px;
-  background: #1a73e8;
+  background: linear-gradient(135deg, #1a73e8, #6f42c1);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 15px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 button:hover {
-  background: #1558b0;
+  box-shadow: 0 0 18px rgba(111, 66, 193, 0.6);
+  transform: translateY(-1px);
 }
 
-/* Google status */
-#google-status {
-  text-align: center;
-  margin-bottom: 15px;
-  font-weight: bold;
-  color: green;
+/* AI Info */
+.ai-info {
+  font-size: 12px;
+  color: #555;
+  margin-top: 15px;
 }
 
-/* Section spacing */
+/* Register section */
 .section {
   margin-top: 20px;
+}
+
+.section a {
+  color: #1a73e8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.section a:hover {
+  text-decoration: underline;
+}
+
+/* Google connect button */
+.google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3c4043;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  margin-bottom: 15px;
+}
+
+.google-btn:hover {
+  background: #f7f8f8;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.google-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Proposal inputs (email + subject already styled via input) */
+
+/* Proposal message textarea */
+#body {
+  width: 100%;
+  min-height: 140px;      /* 👈 makes it large like email body */
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  resize: vertical;      /* user can resize if needed */
+  margin-bottom: 16px;
+  box-sizing: border-box;
 }

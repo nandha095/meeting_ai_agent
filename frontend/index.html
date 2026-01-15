@@ -2,16 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login | AI Meeting Scheduling Agent</title>
+  <title>AI Meeting Agent | Login</title>
 
-  <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
   <div class="container">
-    <h2>Login</h2>
 
+    <!-- AI Icon -->
+    <div class="ai-icon">🤖</div>
+
+    <!-- Title -->
+    <h2>AI Meeting Agent</h2>
+
+    <!-- Subtitle -->
+    <p class="subtitle">
+      Automate proposals, emails & meetings using AI
+    </p>
+
+    <!-- Email -->
     <input
       id="email"
       type="email"
@@ -19,6 +29,7 @@
       autocomplete="username"
     >
 
+    <!-- Password -->
     <input
       id="password"
       type="password"
@@ -26,16 +37,27 @@
       autocomplete="current-password"
     >
 
+    <!-- Forgot password -->
+    <div class="forgot-row">
+      <a href="forgot-password.html">Forgot password?</a>
+    </div>
+
+    <!-- Login Button -->
     <button onclick="login()">Login</button>
 
-    <!-- Register link INSIDE the card -->
-    <div class="section" style="text-align:center;">
+    <!-- AI Info -->
+    <p class="ai-info">
+      Powered by AI-driven email understanding & smart scheduling
+    </p>
+
+    <!-- Register -->
+    <div class="section">
       <p>Don’t have an account?</p>
       <a href="register.html">Register here</a>
     </div>
+
   </div>
 
   <script src="js/auth.js"></script>
-
 </body>
 </html>

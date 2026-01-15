@@ -1,5 +1,5 @@
 from app.db.session import SessionLocal
-from app.services.reply_processor import process_replies
+from app.services.old_reply_processor import process_replies
 from app.models.user import User
 
 

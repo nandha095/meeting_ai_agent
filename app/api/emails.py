@@ -15,26 +15,71 @@ router = APIRouter(
 )
 
 
+# @router.post("/send-proposal")
+# def send_proposal(
+#     payload: ProposalEmailRequest,
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(get_current_user)
+# ):
+#     """
+#     Send a project proposal email using the logged-in user's Gmail
+#     """
+
+#     subject = "Project Proposal"
+#     body = """
+#     <h3>Hello,</h3>
+#     <p>We would like to propose a project collaboration.</p>
+#     <p>Please let us know if you'd like to schedule a meeting.</p>
+#     <br>
+#     <p>Regards,<br>Nandhakumar</p>
+#     """
+
+#     #  Ensure Google is connected for this user
+#     token = db.query(GoogleToken).filter(
+#         GoogleToken.user_id == current_user.id
+#     ).first()
+
+#     if not token:
+#         raise HTTPException(
+#             status_code=400,
+#             detail="Please connect your Google account before sending proposals"
+#         )
+
+#     #  Send email using THIS user's Gmail
+#     send_proposal_email(
+#         db=db,
+#         user_id=current_user.id,
+#         to_email=payload.email,
+#         subject=subject,
+#         body=body
+#     )
+
+#     #  Save proposal in DB
+#     proposal = Proposal(
+#         user_id=current_user.id,
+#         client_email=payload.email,
+#         subject=subject,
+#         body=body,
+#         status="SENT"
+#     )
+
+#     db.add(proposal)
+#     db.commit()
+#     db.refresh(proposal)
+
+#     return {
+#         "message": "Proposal sent successfully",
+#         "proposal_id": proposal.id,
+#         "sent_from": current_user.email
+#     }
+
 @router.post("/send-proposal")
 def send_proposal(
     payload: ProposalEmailRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Send a project proposal email using the logged-in user's Gmail
-    """
-
-    subject = "Project Proposal"
-    body = """
-    <h3>Hello,</h3>
-    <p>We would like to propose a project collaboration.</p>
-    <p>Please let us know if you'd like to schedule a meeting.</p>
-    <br>
-    <p>Regards,<br>Nandhakumar</p>
-    """
-
-    # 🔐 Ensure Google is connected for this user
+    # 🔐 Ensure Google is connected
     token = db.query(GoogleToken).filter(
         GoogleToken.user_id == current_user.id
     ).first()
@@ -45,21 +90,21 @@ def send_proposal(
             detail="Please connect your Google account before sending proposals"
         )
 
-    # ✅ Send email using THIS user's Gmail
+    # ✅ Send email using user's Gmail
     send_proposal_email(
         db=db,
         user_id=current_user.id,
         to_email=payload.email,
-        subject=subject,
-        body=body
+        subject=payload.subject,
+        body=payload.body
     )
 
     # ✅ Save proposal in DB
     proposal = Proposal(
         user_id=current_user.id,
         client_email=payload.email,
-        subject=subject,
-        body=body,
+        subject=payload.subject,
+        body=payload.body,
         status="SENT"
     )
 
